@@ -1,0 +1,148 @@
+//
+#include <OneWire.h>
+#include <DallasTemperature.h>
+#define ONE_WIRE_BUS 2
+
+char data = 0;   
+int state=0;
+float volts,celsius,farenheit;
+int temppin = 0;
+int temp,moisture__dig_signal = 4; //define the digital input on the arduino for the sensor signal
+int sensor_state = 1; 
+int ledpin=13;
+int ldrpin=1;
+
+void setup()
+{ 
+  sensors.begin();
+  pinmode(ledpin, output);
+  pinmode(ldrpin, input);
+  pinmode(moisture__dig_signal, input); //step pin as input
+  serial.begin(9600); // start the serial communication
+}
+void surrounding_temperature()
+{
+  temp = analogread(temppin);
+   // read analog volt from sensor and save to variable temp
+    
+   volts= (temp / 1024.0) *5000; // convert to kelvin
+   celsius = volts/10; // convert to celsius
+ 
+   farenheit = (celsius * 1.8) +32; // convert to farenheit
+  
+   // convert the analog volt to its temperature equivalent
+   serial.println("temperature of surrounding in celsius");
+   serial.println(celsius);
+   serial.println();
+   serial.println("temperature of surrounding in farenheit");
+   serial.println(farenheit);
+   delay(1000);
+    // update sensor reading each one second
+} 
+void soil_moisture_level(){
+  serial.println("soil moisture level: ");
+  sensor_state = digitalread(moisture__dig_signal);
+  if (sensor_state == 1) {
+    serial.println("wet");
+  }
+  else {
+    serial.println("dry");
+  }
+  delay(200);
+}
+void plant_temperature()
+{
+  temp = analogread(temppin);
+   // read analog volt from sensor and save to variable temp
+    
+   volts= (temp / 1024.0) *5000; // convert to kelvin
+   celsius = volts/10; // convert to celsius
+ 
+   farenheit = (celsius * 1.8) +32; // convert to farenheit
+  
+   // convert the analog volt to its temperature equivalent
+   serial.println("temperature of plant in celsius");
+   serial.println(celsius);
+   serial.println();
+   serial.println("temperature of plant in farenheit");
+   serial.println(farenheit);
+   delay(1000);
+    // update sensor reading each one second
+} 
+void sunlight()
+{
+ int ldrstatus = analogread(ldrpin);
+
+if (ldrstatus <= 200) {
+
+digitalwrite(ledpin, high);
+
+serial.println("its dark, turn on the led : ");
+
+serial.println(ldrstatus);
+
+} else {
+
+digitalwrite(ledpin, low);
+
+serial.println("its bright, turn off the led : ");
+
+serial.println(ldrstatus);
+
+}
+} 
+void soil_function(){
+    sensors.requesttemperatures(); 
+
+  //print the temperature in celsius
+  serial.print("temperature: ");
+  serial.print(sensors.gettempcbyindex(0));
+  serial.print((char)176);//shows degrees character
+  serial.print("c  |  ");
+  
+  //print the temperature in fahrenheit
+  serial.print((sensors.gettempcbyindex(0) * 9.0) / 5.0 + 32.0);
+  serial.print((char)176);//shows degrees character
+  serial.println("f");
+  
+  delay(500);
+}
+
+void loop(){
+  int a;
+  serial.println("enter your choice of case");
+  while(serial.available()==0){
+  }
+  a=serial.parseint();
+  while (serial.available() > 0) { //if there is any information comming from the serial lines...
+  }
+    data = serial.read();
+  if(data=='1'){
+ 
+  switch(a){
+    case 1:
+          plant_temperature();
+          break;
+    case 2:
+          surrounding_temperature();
+          break;
+    case 3:
+          soil_moisture_level();
+          break;
+    case 4:
+           soil_function()
+           break;
+    case 5:
+           plant_temperature();
+           surrounding_temperature();
+           soil_moisture_level();
+           sunlight();
+           break;
+    default:
+            serial.println("please choose a number");
+  }}
+  else
+  {
+    serial.println("invalid");}
+
+} 
